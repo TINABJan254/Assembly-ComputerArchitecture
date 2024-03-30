@@ -2,7 +2,8 @@
 .MODEL SMALL
 .STACK 100
 .DATA                   
-    CRLF    DB	13, 10, '$'     ;ki tu xuong dong
+    CRLF DB	13, 10, '$'     ;ki tu xuong dong
+    tmp DB ?
      
 .CODE
 MAIN PROC              
@@ -12,10 +13,16 @@ MAIN PROC
     
     ;Read
     MOV AH, 1
+    INT 21H    
+    MOV tmp, AL
+    
+    ;Enter   
+    LEA DX, CRLF
+    MOV AH, 9
     INT 21H
     
-    ;Print
-    MOV DL, AL
+    ;Convert and print
+    MOV DL, tmp
     SUB DL, 32  ;lower_case - 32 = upper_case
     MOV AH, 2
     INT 21H
