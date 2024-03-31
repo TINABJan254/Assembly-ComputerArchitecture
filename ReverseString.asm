@@ -1,9 +1,10 @@
-;Nhap vao 1 chuoi, in chuoi dao nguoc
+;Nhap vao 1 chuoi, in chuoi dao nguoc  
+;Using stack
 .MODEL SMALL
 .STACK 100
 .DATA
     CRLF DB 13, 10, '$' 
-    str DB DUP('$')
+    str DB 50 DUP('$')
 
 .CODE
 MAIN PROC              
