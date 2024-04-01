@@ -1,3 +1,4 @@
+;Nhap vao 1 so va in ra man hinh
 .MODEL SMALL
 .STACK 100H
 .DATA
