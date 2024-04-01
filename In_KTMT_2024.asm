@@ -1,9 +1,9 @@
-;Nhap vao 1 chuoi ky tu, ket thuc khi nhap dau #
+;In KTMT 2024
 .MODEL SMALL
 .STACK 100
 .DATA   
     CRLF DB 13, 10, '$'  
-    str DB 100 DUP('$')
+    str DB 'KTMT_2024$'
      
 .CODE
 MAIN PROC    
@@ -11,20 +11,9 @@ MAIN PROC
     MOV AX, @DATA
     MOV DS, AX
     
-    ;Nhap xau
-    LEA SI, str
-    NHAP:
-        MOV AH, 1
-        INT 21H
-              
-        CMP AL, '#'
-        JE THOAT
-              
-        MOV [SI], AL
-        INC SI
-    JMP NHAP
-    
-    THOAT:
+    MOV AH, 9
+    LEA DX, str
+    INT 21H
     
     ;Ket thuc chuong trinh
     MOV AH, 4CH
