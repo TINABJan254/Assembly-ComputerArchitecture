@@ -19,15 +19,6 @@ MAIN PROC
         ADD AX, CX
     LOOP TONG
     
-    CALL XUAT_TONG
-    
-    ;Ket thuc ctrinh
-    MOV AH, 4CH
-    INT 21H
-MAIN ENDP  
-
-XUAT_TONG PROC
-    
     ;Tach chu so
     MOV BX, 10
     MOV CX, 0
@@ -51,7 +42,10 @@ XUAT_TONG PROC
         INT 21H        
     LOOP XUAT
     
-    RET
-XUAT_TONG ENDP
+    ;Ket thuc ctrinh
+    MOV AH, 4CH
+    INT 21H 
+    
+MAIN ENDP  
 
 END MAIN
