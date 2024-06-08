@@ -1,0 +1,252 @@
+* Cấu trúc 1 chương trình assembly
+
+	.MODEL SMALL
+	.STACK 100
+	.DATA
+		[label] [mnemonic] [operands] ; [comment]
+		....
+	.CODE
+	MAIN PROC
+		......
+	MAIN ENDP
+
+	[TEN_CT_CON] PROC
+		......
+	[TEN_CT_CON] ENDP
+
+	END MAIN
+------------------------------------------------------
+* Các thanh ghi đó là: 
+	AX(16bit) : AH(8bit) - AL(8bit) thường dùng tính toán
+	BX(16bit) : BH(8bit) - BL(8bit)	thường dùng lưu địa chỉ
+	CX		  : bộ đếm
+	DX		  : lưu
+
+-----------------------------------------------------
+* Các lệnh trao đổi dữ liệu:
+1. MOV : lệnh gán giá trị
+	gán đa phần các giá trị đều có bit bằng nhau
+	vd: MOV AL, BL 			; AL = BL
+
+2. LEA : gán địa chỉ hiệu dụng
+	nạp địa chỉ gốc vào đích
+	đích thường là : BX, DX, BP, SI, DI
+	vd: 
+		LEA SI, a        ; nạp địa chỉ biến a vào SI
+		LEA CX, [BX]	 ; nạp địa chỉ ô nhớ có địa chỉ [DS:BX] vào CX
+3. PUSH : đẩy giá trị vào ngăn xếp
+	PUSH [gốc]
+	vd: PUSH AX		; đẩy giá trị AX vào ngăn xếp
+
+
+---------------------------------
+* Các lệnh ngắt trong assembly:
+1. Hàm ngắt AH loại 1, dùng để nhập 1 ký tự vào từ bàn phím
+	- kí tự nhập vào được lưu ở AL
+	MOV AH, 1
+	INT 21H
+
+2. Hàm ngắt AH loại 2, dùng để hiển thị ký tự ra màn hình. Mã ASCII của ký tự muốn hiển thị phải được cất trong thanh ghi DL
+	- Muốn in ra ký tự vừa nhập thì lấy từ trong thanh ghi AL ra: MOV DL, AL
+	
+	vd:
+	MOV AH, 2
+	MOV DL, [Mã ASCII của ký tự]
+	INT 21H
+
+3. Hàm ngắt AH loại 9, dùng để xuất 1 chuỗi ký tự. 
+	- Chuỗi này phải kết thúc bằng $. 
+	- Chuỗi cần in phải được lưu trong DX: LEA DX, [chuỗi];
+
+	str DB "hello world!$" ; phải được khai báo ở trong .DATA
+	......................
+	MOV AX, @DATA
+	MOV DS, AX
+	MOV AH, 9         
+	LEA DX, str
+	INT 21H 
+
+4. Hàm ngắt AH, 10, dùng để nhập 1 chuỗi ký tự
+	MOV AH, 10
+	LEA DX, str
+	INT 21H
+
+5. Hàm ngắt AH CH4, dùng để dừng chương trình
+
+	MOV AH, 4CH
+	INT 21H
+---------------------------
+* Cộng, trừ, nhân, chia, so sánh
+
+1. ADD ; hàm cộng
+	MOV AL, 1
+	MOV BL, 4
+	ADD AL, BL ; AL = AL + BL = 5
+2. SUB ; hàm trừ
+	MOV AL, 8
+	MOV BL, 2
+	SUB AL, BL ; AL = AL - BL = 6
+3. MUL ; hàm nhân
+	ngầm định AL/AX là số nhân
+	kết quả lưu vào AX = AL * gốc   (với gốc 8bit)
+					DXAX = AX * gốc (với gốc 16bit)
+	vd: ta muốn tính 2 * 5
+		MOV AL, 2
+		MOV BL, 5
+		MUL BL		; AX = AL * BL  (đây là nhân 8 bit)
+	vd: nhân với 16 bit
+		MOV AX, 40
+		MOV BX, 50
+		MUL BX 		; DXAX = AX * BX (đây là nhân 16bit)
+	MOV AL, 200
+	MOV BL, 4
+	MUL BL ; AX = BL * AL = 800
+4. DIV ; hàm chia
+	Với gốc 8bit:
+		AH = AX % gốc: lưu phần dư
+		AL = AX / gốc: lưu phần nguyên
+	Với gốc 16bit:
+		AX = DXAX / gốc : lưu phần nguyên
+		DX = DXAX % gốc : lưu phần dư
+
+	MOV AL, 20
+	MOV BX, 6
+	DIV BL 		; AL = 3 (DIV),  AH = 2 (MOD) Chia cho thanh ghi 8bit
+	DIV BX 		; AX = 3 (DIV),  DX = 2 (MOD) Chia cho thanh ghi 16bit
+5. CMP ; lệnh so sánh
+	cú pháp: CMP đích, gốc
+	so sánh hai toán hạnh đích và gốc
+	khi so sánh hai toán hạng ko thay đổi, ko lưu kết quả so sánh
+	chỉ tác động đến thanh ghi cờ FR
+	thường dùng để tạo cờ hiệu cho lệnh nhảy
+
+---------------------------------------------
+* Các lệnh di chuyển chuỗi
+1. LODSB/LODSW
+	- Di chuyển dữ liệu từ bộ nhớ vào thanh ghi AX, tăng con trỏ bộ nhớ sau khi lệnh được thực thi
+	Cụ thể:
+		- đọc 1 byte từ bộ nhớ tại địa chỉ mà con trỏ bộ nhớ trỏ tới, byte đó được lưu vào thanh ghi AL
+		- con trỏ bộ nhớ đó sẽ được tăng lên 1 byte
+		- nếu cờ Direction (DF) được thiết lập, con trỏ bộ nhớ sẽ giảm thay vì tăng
+2. LODSW
+	- lodsw cũng giống như lodsb nhưng nó đọc một từ (word) từ bộ nhớ và lưu trữ trong thanh ghi AX.
+	Cụ thể:
+		- lodsw sẽ đọc hai byte từ bộ nhớ tại địa chỉ mà con trỏ bộ nhớ (nằm trong thành ghi SI) trỏ tới
+		- Byte đó sẽ được đưa vào thanh ghi AL
+		- Con trỏ bộ nhớ sẽ được tăng lên 2 byte
+		- Nếu cờ Direction (DF) được thiết lập, con trỏ bộ nhớ sẽ giảm thay vì tăng
+
+---------------------------------------------
+* Khai báo biến
+	- các kiểu dữ liệu: 
+		DB : 8bit
+		DW : 16bit
+		DD : 32bit
+	- khai báo:
+		ten_bien <kieu_du_lieu> gia_tri_khoi_tao
+	vd: 
+		x DB 12					;variable
+		str DB 'helloworld$' 	;string
+		arr DB 1, 3, 5, 7, 9	;array
+		ar2 DW 50 DUP(?)			;array not initialize
+
+---------------------------------------------
+* Lệnh rẽ nhánh
+ JMP: LỆNH NHẢY KO CẦN ĐIỀU KIỆN
+ Instruction				Description						Flags Test
+	JE/JZ		Jump Equal or Jump Zero							ZF
+	JNE/JNZ		Jump Not Equal or Jump Not Zero					ZF
+	JG/JNLE		Jump Greater or Jump Not Less/Equal			OF, SF, ZF
+	JGE/JNL		Jump Greater/Equal or Jump Not Less				OF, SF
+	JL/JNGE		Jump Less or Jump Not Greater/Equal				OF, SF
+	JLE/JNG		Jump Less/Equal or Jump Not Greater			OF, SF, ZF
+
+	- Cách dùng:
+		CMP [toán hạng 1], [toán hạng 2]
+		[lệnh rẽ nhánh] [label]
+
+
+		[lable]:
+			......
+		vd:
+			CMP AX, 0
+			JE RA		; nhảy đến RA nếu AX = 0
+
+			RA:
+				...
+
+--------------------------------------------------
+* Vòng lặp
+
+Có hai kiểu vòng lặp đó là dùng LOOP và JMP tương ứng với while(t--) và while(true) trong c++
+
+1. LOOP 	; while (t--)
+	- CX là biến đếm
+
+	hi DB 'hello$'
+	..........
+	MOV CX, 5
+	LAP:
+		MOV AH, 9
+		LEA DX, hi
+		INT 21H
+
+		LEA DX, CRLF
+		INT 21h
+	LOOP LAP
+
+	-> In ra hello 5 lần
+
+2. JMP 		; while (true)
+	
+	hi DB 'hello$'
+	.................
+	MOV CX, 1
+	LAP:
+		CMP CX, 5
+		IG RA
+
+		MOV AH, 9
+		LEA DX, hi
+		INT 21H
+
+		LEA DX, CRLF
+		INT 21H
+
+		INC CX
+	JMP LAP
+
+	RA:
+		........
+
+	-> In ra hello 5 lần
+
+
+
+------------------------------------------------------
+* Stack
+	- stack có 2 lệnh là PUSH và POP (vừa lấy ra gán + vừa pop)
+	- chỉ PUSH được giá trị 16bit
+	vd:
+		MOV AX, 1234h
+		PUSH AX
+		..... có thể biến đổi AX chán chê, nhưng tí nữa lấy ra vẫn còn như ban đầu
+		POP DX 	; DX = AX lúc đầu
+-------------------------------------------------------
+* Chương trình con
+
+
+
+
+-------------------------------------------------------
+
+
+NOTE:
+	- Khi code nên đưa các thanh ghi về giá trị 0 (MOV DX, 0) vì các thanh ghi có thể chưa bằng 0
+	- 13 Là Enter
+	- label khi gặp label thì chương trìh cũng tự động nhảy các câu lệnh phia dưới nhãn luôn, chứ ko nhất thiết phải cần gọi
+	- SI : 16bit
+	- [SI] : 8bit
+	- MOV AH, 2 	: Chỉ áp dụng với kí tự, nên khi muốn in 1 số có 1 chữ số ta phải chuyển số đó về dạng ký tự rồi in ra
+	- Ko được để hai ô nhớ cạnh nhau vd: MOV [SI], [DI]
+	- Muốn bảo vệ 1 cái nào đó không bị thay đổi thì hãy PUSH nó vào stack
