@@ -148,7 +148,7 @@
 		x DB 12					;variable
 		str DB 'helloworld$' 	;string
 		arr DB 1, 3, 5, 7, 9	;array
-		ar2 DW 50 DUP(?)			;array not initialize
+		ar2 DW 50 DUP(?)		;array not initialize
 
 ---------------------------------------------
 * Lệnh rẽ nhánh
